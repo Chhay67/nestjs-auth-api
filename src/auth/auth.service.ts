@@ -44,8 +44,8 @@ export class AuthService {
                throw new UnauthorizedException('username invalid.');
           }
           //Generate JWT tokens
-          const accessToken = await this.generateUserTokens(user._id, {expiresIn :'1h' });
-          const refreshToken = await this.generateUserTokens(user._id, {expiresIn :'30d' });
+          const accessToken = await this.generateUserTokens(user._id, {expiresIn :'2m' });
+          const refreshToken = await this.generateUserTokens(user._id, {expiresIn :'5m' });
 
           await this.storeRefreshToken(refreshToken,user._id);
           return {
