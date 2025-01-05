@@ -49,6 +49,7 @@ export class AuthService {
 
           await this.storeRefreshToken(refreshToken,user._id);
           return {
+               id : user._id,
                username: user.username,
                name: user.name,
                tokens:{
@@ -94,5 +95,19 @@ export class AuthService {
               upsert: true,
             },
           );
+        }
+
+        async getUserById(id:string){
+          // const validId =  mongoose.isValidObjectId(id);
+          // if(!validId){
+          //      throw new B('invalid user i');
+          // }
+          const user = await this.UserModel.findById(id);
+          if(!user){
+               throw new BadRequestException('invalid user.');
+          }
+          return {
+               name :user.name,
+          };
         }
 }

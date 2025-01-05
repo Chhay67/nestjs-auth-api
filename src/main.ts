@@ -15,7 +15,7 @@ async function bootstrap() {
   .setTitle('Auth Api')
   .setDescription('Testing Login and refresh token propose')
   .setVersion('1.0')
-  // .addBearerAuth()
+  .addBearerAuth()
   .build();
 
   const document = SwaggerModule.createDocument(app,config);  
