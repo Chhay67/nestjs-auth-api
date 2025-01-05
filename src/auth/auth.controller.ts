@@ -19,7 +19,7 @@ export class AuthController {
     return this.authService.signup(singUpData);
   }
 
-  @ApiOperation({summary: 'Login user'})
+  @ApiOperation({summary: 'Login user, acessToken expires in 2 minute and refreshToken expires in 5 minute.'})
   // @ApiResponse({
   //   status:201,
   //   type:LoginDto
