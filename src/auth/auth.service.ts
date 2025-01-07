@@ -68,8 +68,8 @@ export class AuthService {
              if (!tokenModel) {
                throw new UnauthorizedException('Refresh Token is invalid');
              }
-             const accessToken = await this.generateUserTokens(tokenModel.userId, {expiresIn :'1h' });
-          const refreshToken = await this.generateUserTokens(tokenModel.userId, {expiresIn :'30d' });
+             const accessToken = await this.generateUserTokens(tokenModel.userId, {expiresIn :'2m' });
+          const refreshToken = await this.generateUserTokens(tokenModel.userId, {expiresIn :'5m' });
 
           await this.storeRefreshToken(refreshToken,tokenModel.userId);
              return {
@@ -85,9 +85,8 @@ export class AuthService {
 
      async storeRefreshToken(token: string, userId: mongoose.Types.ObjectId) {
           // Calculate expiry date 30 days from now
-          const expiryDate = new Date();
-          expiryDate.setDate(expiryDate.getDate() + 30);
-      
+          const expiryDate = new Date().setMinutes(5);
+          
           await this.refreshTokenModel.updateOne(
             { userId },
             { $set: { expiryDate, token } },
