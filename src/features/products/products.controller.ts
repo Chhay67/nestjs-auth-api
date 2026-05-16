@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
@@ -19,6 +19,11 @@ export class ProductsController {
   }
 
   @ApiOperation({ summary: 'Get product by id' })
+  @ApiParam({
+    name: 'id',
+    example: '665f25a50f4f3a6a9a222222',
+    description: 'MongoDB product id',
+  })
   @ApiResponse({ status: 200, type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @Get(':id')
@@ -38,6 +43,11 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update product' })
+  @ApiParam({
+    name: 'id',
+    example: '665f25a50f4f3a6a9a222222',
+    description: 'MongoDB product id',
+  })
   @ApiResponse({ status: 200, type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @Patch(':id')
@@ -48,6 +58,11 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete product' })
+  @ApiParam({
+    name: 'id',
+    example: '665f25a50f4f3a6a9a222222',
+    description: 'MongoDB product id',
+  })
   @ApiResponse({ status: 200, type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @Delete(':id')

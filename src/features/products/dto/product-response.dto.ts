@@ -1,21 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ProductResponseDto {
-  @ApiProperty()
+  @ApiProperty({ example: '665f25a50f4f3a6a9a222222' })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'example' })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'example' })
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 29.99 })
   price: number;
 
-  @ApiProperty()
+  @ApiProperty({ example: '2026-05-16T04:00:00.000Z' })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ example: '2026-05-16T04:00:00.000Z' })
   updatedAt: Date;
 }

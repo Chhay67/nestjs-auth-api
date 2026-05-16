@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString, Min } from 'class-validator';
 
 export class CreateProductDto {
-  @ApiProperty({ example: 'NestJS Course' })
+  @ApiProperty({ example: 'example' })
   @IsString()
   name: string;
 
-  @ApiProperty({ example: 'Beginner friendly API development course' })
+  @ApiProperty({ example: 'example' })
   @IsString()
   description: string;
 
