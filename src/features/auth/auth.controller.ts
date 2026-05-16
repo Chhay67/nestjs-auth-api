@@ -15,7 +15,7 @@ import {
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @ApiOperation({ summary: 'Register user' })
   @ApiResponse({
@@ -23,23 +23,13 @@ export class AuthController {
     description: 'User registered successfully. This endpoint does not return a response body.',
   })
   @ApiResponse({ status: 400, description: 'Username already exists or request body is invalid' })
-  @Post('signup')
-  async signUp(@Body() signUpData: SignUpDto) {
-    return this.authService.signup(signUpData);
-  }
-
-  @ApiOperation({ summary: 'Register user' })
-  @ApiResponse({
-    status: 201,
-    description: 'User registered successfully. This endpoint does not return a response body.',
-  })
   @Post('register')
   async register(@Body() signUpData: SignUpDto) {
     return this.authService.signup(signUpData);
   }
 
   @ApiOperation({
-    summary: 'Login user, accessToken expires in 2 minutes and refreshToken expires in 5 minutes by default.',
+    summary: 'Login user, accessToken expires in 5 minutes and refreshToken expires in 1 day by default.',
   })
   @ApiResponse({ status: 201, type: LoginResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid username or password' })
@@ -77,15 +67,6 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, type: UserProfileResponseDto })
-  @Get('me')
-  async me(@CurrentUser() user: { userId: string }) {
-    return this.authService.getProfile(user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ status: 200, type: UserProfileResponseDto })
   @Get('profile')
   async profile(@CurrentUser() user: { userId: string }) {
     return this.authService.getProfile(user.userId);
@@ -104,7 +85,7 @@ export class AuthController {
     description: 'Returns the same { name } shape as the original endpoint',
     schema: {
       example: {
-        name: 'Kim Chhay',
+        name: 'example',
       },
     },
   })

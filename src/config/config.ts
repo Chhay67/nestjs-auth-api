@@ -5,8 +5,8 @@ export default () => ({
   },
   jwt: {
     jwtSecret: process.env.JWT_SECRET,
-    accessTokenExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '2m',
-    refreshTokenExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '5m',
+    accessTokenExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '5m',
+    refreshTokenExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '1d',
   },
 });
 

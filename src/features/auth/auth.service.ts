@@ -59,25 +59,32 @@ export class AuthService {
   }
 
   async refreshTokens(token: string) {
-    let payload: { sub?: string; userId?: string };
+    const refreshToken = this.normalizeToken(token);
+    let payload: { sub?: string; userId?: string; tokenType?: string };
 
     try {
-      payload = this.jwtService.verify(token);
+      payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('jwt.jwtSecret'),
+      });
     } catch {
       throw new UnauthorizedException('Refresh Token is invalid');
     }
 
     const userId = payload.sub || payload.userId;
-    const tokenModel = await this.refreshTokenModel.findOne({
-      userId,
-      expiryDate: { $gte: new Date() },
-    });
 
-    if (!tokenModel) {
+    if (!userId || payload.tokenType !== 'refresh') {
       throw new UnauthorizedException('Refresh Token is invalid');
     }
 
-    const tokenIsValid = await bcrypt.compare(token, tokenModel.hashedToken);
+    const tokenModel = await this.refreshTokenModel.findOne({
+      userId,
+    });
+
+    if (!tokenModel || !tokenModel.hashedToken || tokenModel.expiryDate < new Date()) {
+      throw new UnauthorizedException('Refresh Token is invalid');
+    }
+
+    const tokenIsValid = await bcrypt.compare(refreshToken, tokenModel.hashedToken);
 
     if (!tokenIsValid) {
       throw new UnauthorizedException('Refresh Token is invalid');
@@ -113,8 +120,16 @@ export class AuthService {
   }
 
   private async generateAuthTokens(userId: Types.ObjectId | string) {
-    const accessToken = this.generateUserToken(userId, this.configService.get<string>('jwt.accessTokenExpiresIn'));
-    const refreshToken = this.generateUserToken(userId, this.configService.get<string>('jwt.refreshTokenExpiresIn'));
+    const accessToken = this.generateUserToken(
+      userId,
+      this.configService.get<string>('jwt.accessTokenExpiresIn') || '5m',
+      'access',
+    );
+    const refreshToken = this.generateUserToken(
+      userId,
+      this.configService.get<string>('jwt.refreshTokenExpiresIn') || '1d',
+      'refresh',
+    );
 
     return {
       accessToken,
@@ -122,15 +137,19 @@ export class AuthService {
     };
   }
 
-  private generateUserToken(userId: Types.ObjectId | string, expiresIn: string) {
+  private generateUserToken(userId: Types.ObjectId | string, expiresIn: string, tokenType: 'access' | 'refresh') {
     const id = userId.toString();
 
     return this.jwtService.sign(
       {
         sub: id,
         userId: id,
+        tokenType,
       },
-      { expiresIn },
+      {
+        expiresIn,
+        secret: this.configService.get<string>('jwt.jwtSecret'),
+      },
     );
   }
 
@@ -153,11 +172,10 @@ export class AuthService {
   }
 
   private getRefreshTokenExpiryDate() {
-    // Keep the original beginner-friendly 5 minute refresh window by default.
-    const expiresIn = this.configService.get<string>('jwt.refreshTokenExpiresIn') || '5m';
-    const minutes = expiresIn.endsWith('m') ? parseInt(expiresIn, 10) : 5;
+    const expiresIn = this.configService.get<string>('jwt.refreshTokenExpiresIn') || '1d';
+    const milliseconds = this.getDurationInMilliseconds(expiresIn);
 
-    return new Date(Date.now() + minutes * 60 * 1000);
+    return new Date(Date.now() + milliseconds);
   }
 
   private async validatePassword(password: string, storedPassword: string) {
@@ -170,5 +188,32 @@ export class AuthService {
 
   private isBcryptHash(password: string) {
     return password.startsWith('$2a$') || password.startsWith('$2b$') || password.startsWith('$2y$');
+  }
+
+  private getDurationInMilliseconds(value: string) {
+    const amount = parseInt(value, 10);
+    const unit = value.replace(amount.toString(), '');
+
+    if (unit === 's') {
+      return amount * 1000;
+    }
+
+    if (unit === 'm') {
+      return amount * 60 * 1000;
+    }
+
+    if (unit === 'h') {
+      return amount * 60 * 60 * 1000;
+    }
+
+    if (unit === 'd') {
+      return amount * 24 * 60 * 60 * 1000;
+    }
+
+    return 24 * 60 * 60 * 1000;
+  }
+
+  private normalizeToken(token: string) {
+    return token.replace(/^Bearer\s+/i, '').trim();
   }
 }
