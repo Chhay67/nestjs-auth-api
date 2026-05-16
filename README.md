@@ -77,7 +77,7 @@ Required variables:
 
 Optional variables:
 
-- `PORT`, defaults to `3000`
+- `PORT`, defaults to `3000`; this project currently uses `80` in `.env`
 - `JWT_ACCESS_EXPIRES_IN`, defaults to `5m`
 - `JWT_REFRESH_EXPIRES_IN`, defaults to `1d`
 
@@ -92,6 +92,7 @@ The latest API shape is:
 - Access tokens expire after 5 minutes by default.
 - Refresh tokens expire after 1 day by default.
 - Refresh tokens are rotated, so every successful refresh returns a new refresh token.
+- Successful responses now use a consistent wrapper: `{ success, statusCode, message, data }`.
 
 ## Authentication
 
@@ -108,16 +109,34 @@ Auth routes are under `/auth`.
 
 ### Login Response Shape
 
-The login response keeps the existing frontend-friendly shape:
+Successful responses use this structure:
 
 ```json
 {
-  "id": "665f1f7d0f4f3a6a9a111111",
-  "username": "example",
-  "name": "example",
-  "tokens": {
-    "accessToken": "jwt_access_token",
-    "refreshToken": "jwt_refresh_token"
+  "success": true,
+  "statusCode": 200,
+  "message": "Login successful",
+  "data": {}
+}
+```
+
+The login user and token payload is inside `data`:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "665f1f7d0f4f3a6a9a111111",
+      "username": "example",
+      "name": "example"
+    },
+    "tokens": {
+      "accessToken": "jwt_access_token",
+      "refreshToken": "jwt_refresh_token"
+    }
   }
 }
 ```
@@ -126,12 +145,17 @@ Access tokens include `tokenType: "access"` inside the JWT payload.
 
 ### Refresh Response Shape
 
-The refresh response keeps the existing shape:
+The refresh response also uses the same wrapper:
 
 ```json
 {
-  "accessToken": "new_jwt_access_token",
-  "refreshToken": "new_jwt_refresh_token"
+  "success": true,
+  "statusCode": 200,
+  "message": "Refresh token successful",
+  "data": {
+    "accessToken": "new_jwt_access_token",
+    "refreshToken": "new_jwt_refresh_token"
+  }
 }
 ```
 
@@ -142,7 +166,7 @@ Refresh tokens include `tokenType: "refresh"` inside the JWT payload.
 Use this flow when testing in Swagger or from the frontend:
 
 1. Call `POST /auth/login`.
-2. Copy `tokens.refreshToken` from the login response.
+2. Copy `data.tokens.refreshToken` from the login response.
 3. Call `POST /auth/refresh-token`.
 4. Send the refresh token in the request body:
 
@@ -160,10 +184,10 @@ The refresh endpoint also accepts a value with the Bearer prefix:
 }
 ```
 
-After a successful refresh, replace both tokens on the frontend:
+After a successful refresh, replace both tokens from `data` on the frontend:
 
-- replace the old access token with the new `accessToken`
-- replace the old refresh token with the new `refreshToken`
+- replace the old access token with the new `data.accessToken`
+- replace the old refresh token with the new `data.refreshToken`
 
 Important: the previous refresh token becomes invalid after refresh token rotation. If refresh always returns `401 Refresh Token is invalid`, login again and use the newest `tokens.refreshToken`.
 
@@ -193,27 +217,35 @@ Product fields:
 
 | Method | Route | Protected | Description |
 | --- | --- | --- | --- |
-| GET | `/products` | No | Get all products |
-| GET | `/products/:id` | No | Get one product |
+| GET | `/products` | Yes | Get all products |
+| GET | `/products/:id` | Yes | Get one product |
 | POST | `/products` | Yes | Create product |
 | PATCH | `/products/:id` | Yes | Update product |
 | DELETE | `/products/:id` | Yes | Delete product |
 
-For protected product routes, send the access token in the Authorization header:
+All product routes are protected. Send the access token in the Authorization header:
 
 ```text
 Authorization: Bearer your_access_token
 ```
+
+Protected product routes only accept an access token. A refresh token will be rejected with `401 Invalid token`.
 
 ## Swagger
 
 Swagger is available at:
 
 ```text
-http://localhost:3000/docs
+http://localhost/docs
 ```
 
-If `PORT` is changed in `.env`, use that port instead.
+The current `.env` uses `PORT=80`, so the local API base URL is:
+
+```text
+http://localhost
+```
+
+If you change `PORT` to another value, include that port in the URL. For example, `PORT=3000` uses `http://localhost:3000/docs`.
 
 Swagger includes:
 

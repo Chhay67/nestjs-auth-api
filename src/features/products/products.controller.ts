@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { ResponseMessage } from '../../common/decorators/response-message.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -11,13 +12,18 @@ import { ProductsService } from './products.service';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all products' })
   @ApiResponse({ status: 200, type: [ProductResponseDto] })
+  @ResponseMessage('Products fetched successfully')
   @Get()
   async findAll() {
     return this.productsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get product by id' })
   @ApiParam({
     name: 'id',
@@ -26,6 +32,7 @@ export class ProductsController {
   })
   @ApiResponse({ status: 200, type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @ResponseMessage('Product fetched successfully')
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
@@ -35,6 +42,7 @@ export class ProductsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create product' })
   @ApiResponse({ status: 201, type: ProductResponseDto })
+  @ResponseMessage('Product created successfully')
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
@@ -50,6 +58,7 @@ export class ProductsController {
   })
   @ApiResponse({ status: 200, type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @ResponseMessage('Product updated successfully')
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productsService.update(id, updateProductDto);
@@ -65,6 +74,7 @@ export class ProductsController {
   })
   @ApiResponse({ status: 200, type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @ResponseMessage('Product deleted successfully')
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.productsService.remove(id);

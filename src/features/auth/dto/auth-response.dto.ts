@@ -14,7 +14,7 @@ export class TokenPairDto {
   refreshToken: string;
 }
 
-export class LoginResponseDto {
+export class AuthUserDto {
   @ApiProperty({ example: '665f1f7d0f4f3a6a9a111111' })
   id: string;
 
@@ -23,6 +23,11 @@ export class LoginResponseDto {
 
   @ApiProperty({ example: 'example' })
   name: string;
+}
+
+export class LoginResponseDto {
+  @ApiProperty({ type: AuthUserDto })
+  user: AuthUserDto;
 
   @ApiProperty({ type: TokenPairDto })
   tokens: TokenPairDto;

@@ -19,7 +19,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async signup(signUpData: SignUpDto) {
     const { name, username, password } = signUpData;
@@ -51,9 +51,11 @@ export class AuthService {
     await this.storeRefreshToken(tokens.refreshToken, user._id);
 
     return {
-      id: user._id,
-      username: user.username,
-      name: user.name,
+      user: {
+        id: user._id,
+        username: user.username,
+        name: user.name,
+      },
       tokens,
     };
   }
@@ -76,8 +78,13 @@ export class AuthService {
       throw new UnauthorizedException('Refresh Token is invalid');
     }
 
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new UnauthorizedException('Refresh Token is invalid');
+    }
+
+    const userObjectId = new Types.ObjectId(userId);
     const tokenModel = await this.refreshTokenModel.findOne({
-      userId,
+      userId: userObjectId,
     });
 
     if (!tokenModel || !tokenModel.hashedToken || tokenModel.expiryDate < new Date()) {
@@ -97,8 +104,9 @@ export class AuthService {
   }
 
   async logout(userId: string) {
-    await this.refreshTokenModel.deleteOne({ userId });
-    return { message: 'Logout successful' };
+    if (Types.ObjectId.isValid(userId)) {
+      await this.refreshTokenModel.deleteOne({ userId: new Types.ObjectId(userId) });
+    }
   }
 
   async getProfile(userId: string) {
@@ -156,9 +164,10 @@ export class AuthService {
   private async storeRefreshToken(token: string, userId: Types.ObjectId | string) {
     const hashedToken = await bcrypt.hash(token, this.saltRounds);
     const expiryDate = this.getRefreshTokenExpiryDate();
+    const userObjectId = typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
 
     await this.refreshTokenModel.updateOne(
-      { userId },
+      { userId: userObjectId },
       {
         $set: {
           hashedToken,

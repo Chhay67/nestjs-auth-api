@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -11,6 +11,7 @@ import {
   RefreshTokenResponseDto,
   UserProfileResponseDto,
 } from './dto/auth-response.dto';
+import { ResponseMessage } from '../../common/decorators/response-message.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -23,6 +24,7 @@ export class AuthController {
     description: 'User registered successfully. This endpoint does not return a response body.',
   })
   @ApiResponse({ status: 400, description: 'Username already exists or request body is invalid' })
+  @ResponseMessage('Register successful')
   @Post('register')
   async register(@Body() signUpData: SignUpDto) {
     return this.authService.signup(signUpData);
@@ -31,16 +33,20 @@ export class AuthController {
   @ApiOperation({
     summary: 'Login user, accessToken expires in 5 minutes and refreshToken expires in 1 day by default.',
   })
-  @ApiResponse({ status: 201, type: LoginResponseDto })
+  @ApiResponse({ status: 200, type: LoginResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid username or password' })
+  @ResponseMessage('Login successful')
+  @HttpCode(200)
   @Post('login')
   async login(@Body() credentials: LoginDto) {
     return this.authService.login(credentials);
   }
 
   @ApiOperation({ summary: 'Refresh user token' })
-  @ApiResponse({ status: 201, type: RefreshTokenResponseDto })
+  @ApiResponse({ status: 200, type: RefreshTokenResponseDto })
   @ApiResponse({ status: 401, description: 'Refresh Token is invalid' })
+  @ResponseMessage('Refresh token successful')
+  @HttpCode(200)
   @Post('refresh-token')
   async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshTokens(refreshTokenDto.refreshToken);
@@ -58,6 +64,8 @@ export class AuthController {
       },
     },
   })
+  @ResponseMessage('Logout successful')
+  @HttpCode(200)
   @Post('logout')
   async logout(@CurrentUser() user: { userId: string }) {
     return this.authService.logout(user.userId);
@@ -67,6 +75,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, type: UserProfileResponseDto })
+  @ResponseMessage('Profile fetched successfully')
   @Get('profile')
   async profile(@CurrentUser() user: { userId: string }) {
     return this.authService.getProfile(user.userId);
@@ -89,6 +98,7 @@ export class AuthController {
       },
     },
   })
+  @ResponseMessage('User fetched successfully')
   @Get(':id')
   async getUserById(@Param('id') id: string) {
     return this.authService.getUserById(id);
