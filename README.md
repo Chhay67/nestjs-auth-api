@@ -98,9 +98,9 @@ The login response keeps the existing frontend-friendly shape:
 
 ```json
 {
-  "id": "user_id",
-  "username": "kimchhay",
-  "name": "Kim Chhay",
+  "id": "665f1f7d0f4f3a6a9a111111",
+  "username": "example",
+  "name": "example",
   "tokens": {
     "accessToken": "jwt_access_token",
     "refreshToken": "jwt_refresh_token"
