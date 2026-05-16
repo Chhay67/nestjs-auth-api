@@ -1,33 +1,24 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './features/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 import config from './config/config';
-import { JwtModule } from '@nestjs/jwt';
+import { validateEnvironment } from './config/config';
+import { DatabaseModule } from './database/database.module';
+import { UsersModule } from './features/users/users.module';
+import { ProductsModule } from './features/products/products.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal :true,
-      cache : true,
-      load:[config],
+      isGlobal: true,
+      cache: true,
+      load: [config],
+      validate: validateEnvironment,
     }),
-    JwtModule.registerAsync({
-      imports:[ConfigModule],
-      inject:[ConfigService],
-      global:true,
-      useFactory: async (config) => ({
-        secret : config.get('jwt.jwtSecret'),
-      })
-    }),
-    MongooseModule.forRootAsync({
-      imports:[ConfigModule],
-      inject:[ConfigService],
-      useFactory: async (config) => ({
-        uri : config.get('database.connectionString'),
-      }),
-    }),
+    DatabaseModule,
+    UsersModule,
     AuthModule,
+    ProductsModule,
   ],
   controllers: [],
   providers: [],

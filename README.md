@@ -1,99 +1,219 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS API Education Project
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This project is a beginner-friendly NestJS API with JWT authentication, refresh token rotation, Swagger documentation, MongoDB through Mongoose, and a simple Products feature for testing protected routes.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Refactor Recap
 
-## Description
+The project was refactored without changing the existing auth API behavior where frontend integration already depended on it.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+What changed:
 
-## Project setup
+- Moved feature code into `src/features`.
+- Split core concerns into `common`, `config`, and `database`.
+- Kept controllers thin and moved business logic into services.
+- Added bcrypt password hashing.
+- Added hashed refresh tokens stored in the database.
+- Added refresh token rotation.
+- Added logout that clears the stored refresh token.
+- Added current-user decorator and JWT guard.
+- Added environment variable validation.
+- Added Swagger tags, bearer auth, operations, and response DTOs.
+- Added a simple Products feature for testing authorization.
 
-```bash
-$ npm install
+## Folder Structure
+
+```text
+src/
+  app.module.ts
+  main.ts
+  common/
+    decorators/
+      current-user.decorator.ts
+    guards/
+      jwt-auth.guard.ts
+  config/
+    config.ts
+  database/
+    database.module.ts
+  features/
+    auth/
+      auth.controller.ts
+      auth.module.ts
+      auth.service.ts
+      dto/
+      schemas/
+    users/
+      users.module.ts
+      users.service.ts
+      schemas/
+    products/
+      products.controller.ts
+      products.module.ts
+      products.service.ts
+      dto/
+      schemas/
 ```
 
-## Compile and run the project
+## Environment Variables
 
-```bash
-# development
-$ npm run start
+Create a `.env` file in the project root:
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```env
+CONNECTION_STRING=mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+PORT=3000
+JWT_ACCESS_EXPIRES_IN=2m
+JWT_REFRESH_EXPIRES_IN=5m
 ```
 
-## Run tests
+Required variables:
 
-```bash
-# unit tests
-$ npm run test
+- `CONNECTION_STRING`
+- `JWT_SECRET`
 
-# e2e tests
-$ npm run test:e2e
+Optional variables:
 
-# test coverage
-$ npm run test:cov
+- `PORT`, defaults to `3000`
+- `JWT_ACCESS_EXPIRES_IN`, defaults to `2m`
+- `JWT_REFRESH_EXPIRES_IN`, defaults to `5m`
+
+## Authentication
+
+Auth routes are under `/auth`.
+
+| Method | Route | Protected | Description |
+| --- | --- | --- | --- |
+| POST | `/auth/signup` | No | Existing register route, preserved |
+| POST | `/auth/register` | No | Register alias |
+| POST | `/auth/login` | No | Login and receive tokens |
+| POST | `/auth/refresh-token` | No | Rotate refresh token and receive new tokens |
+| POST | `/auth/logout` | Yes | Clear stored refresh token |
+| GET | `/auth/me` | Yes | Get current user profile |
+| GET | `/auth/profile` | Yes | Get current user profile |
+| GET | `/auth/:id` | Yes | Existing get-user route, preserved |
+
+### Login Response Shape
+
+The login response keeps the existing frontend-friendly shape:
+
+```json
+{
+  "id": "user_id",
+  "username": "kimchhay",
+  "name": "Kim Chhay",
+  "tokens": {
+    "accessToken": "jwt_access_token",
+    "refreshToken": "jwt_refresh_token"
+  }
+}
 ```
 
-## Deployment
+### Refresh Response Shape
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+The refresh response keeps the existing shape:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
+```json
+{
+  "accessToken": "new_jwt_access_token",
+  "refreshToken": "new_jwt_refresh_token"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Important frontend note: refresh token rotation is enabled. After calling `/auth/refresh-token`, replace both the access token and refresh token on the frontend with the new values.
 
-## Resources
+## Security Notes
 
-Check out a few resources that may come in handy when working with NestJS:
+- Passwords are hashed with bcrypt before saving.
+- Passwords are never returned in API responses.
+- Refresh tokens are hashed before being stored in MongoDB.
+- Logout deletes the stored refresh token.
+- Private routes use `JwtAuthGuard`.
+- Environment variables are validated during app startup.
+- Existing plaintext-password users can still log in once; after a successful login, their password is automatically upgraded to bcrypt.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Products
 
-## Support
+Products are a simple feature for testing authentication and authorization.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Product fields:
 
-## Stay in touch
+- `id`
+- `name`
+- `description`
+- `price`
+- `createdAt`
+- `updatedAt`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+| Method | Route | Protected | Description |
+| --- | --- | --- | --- |
+| GET | `/products` | No | Get all products |
+| GET | `/products/:id` | No | Get one product |
+| POST | `/products` | Yes | Create product |
+| PATCH | `/products/:id` | Yes | Update product |
+| DELETE | `/products/:id` | Yes | Delete product |
 
-## License
+For protected product routes, send the access token in the Authorization header:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```text
+Authorization: Bearer your_access_token
+```
+
+## Swagger
+
+Swagger is available at:
+
+```text
+http://localhost:3000/docs
+```
+
+If `PORT` is changed in `.env`, use that port instead.
+
+Swagger includes:
+
+- `Auth` tag
+- `Products` tag
+- request DTO documentation
+- response DTO documentation
+- bearer token support for protected endpoints
+
+## Install
+
+```bash
+npm install
+```
+
+## Run
+
+```bash
+npm run start
+```
+
+Watch mode:
+
+```bash
+npm run start:dev
+```
+
+Production mode:
+
+```bash
+npm run start:prod
+```
+
+## Verify
+
+Build:
+
+```bash
+npm run build
+```
+
+Unit tests:
+
+```bash
+npm test -- --runInBand
+```
+
+## Notes
+
+This project intentionally does not include roles or advanced permissions yet. Product authorization only checks that the user has a valid JWT access token.
